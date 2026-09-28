@@ -252,9 +252,13 @@ void EditorNode3DGizmo::add_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p
 }
 
 void EditorNode3DGizmo::_update_bvh() {
+	if (!bvh_node_id.is_valid()) {
+		return;
+	}
+
 	ERR_FAIL_NULL(spatial_node);
 
-	if (hidden && !gizmo_plugin->is_selectable_when_hidden()) {
+	if (hidden && (!gizmo_plugin || !gizmo_plugin->is_selectable_when_hidden())) {
 		return;
 	}
 
@@ -506,7 +510,7 @@ bool EditorNode3DGizmo::intersect_frustum(const Camera3D *p_camera, const Vector
 	ERR_FAIL_NULL_V(spatial_node, false);
 	ERR_FAIL_COND_V(!valid, false);
 
-	if (hidden && !gizmo_plugin->is_selectable_when_hidden()) {
+	if (hidden && (!gizmo_plugin || !gizmo_plugin->is_selectable_when_hidden())) {
 		return false;
 	}
 
@@ -651,7 +655,7 @@ bool EditorNode3DGizmo::intersect_ray(Camera3D *p_camera, const Point2 &p_point,
 	ERR_FAIL_NULL_V(spatial_node, false);
 	ERR_FAIL_COND_V(!valid, false);
 
-	if (hidden && !gizmo_plugin->is_selectable_when_hidden()) {
+	if (hidden && (!gizmo_plugin || !gizmo_plugin->is_selectable_when_hidden())) {
 		return false;
 	}
 
