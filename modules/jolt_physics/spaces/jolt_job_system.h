@@ -78,6 +78,9 @@ class JoltJobSystem final : public JPH::JobSystemWithBarrier {
 	inline static SpinLock timings_lock;
 #endif
 
+	// Upper bound of job slots in pages of JPH::cMaxPhysicsJobs (see constructor).
+	static constexpr JPH::uint MAX_JOB_PAGES = 16;
+
 	JPH::FixedSizeFreeList<Job> jobs;
 
 	int thread_count = 0;

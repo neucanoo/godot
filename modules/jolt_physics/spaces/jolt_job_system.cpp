@@ -161,7 +161,14 @@ void JoltJobSystem::_reclaim_jobs() {
 JoltJobSystem::JoltJobSystem() :
 		JPH::JobSystemWithBarrier(JPH::cMaxPhysicsBarriers),
 		thread_count(MAX(1, WorkerThreadPool::get_singleton()->get_thread_count())) {
-	jobs.Init(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsJobs);
+	// A job executed by the stepping thread inside a barrier wait keeps its slot
+	// until its queued WorkerThreadPool task has also run (the task holds a
+	// reference). Spaces are stepped back to back, so when pool threads wake up
+	// late those idle references pile up across spaces: with 24 small spaces,
+	// 1600 of the 2048 slots of a single page were held by tasks not yet started
+	// and job creation stalled. Pages are allocated on demand, so allowing more
+	// pages costs memory only while such a backlog exists.
+	jobs.Init(MAX_JOB_PAGES * JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsJobs);
 }
 
 void JoltJobSystem::pre_step() {
