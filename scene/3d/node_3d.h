@@ -282,6 +282,7 @@ public:
 
 	Transform3D get_global_transform_interpolated();
 	bool update_client_physics_interpolation_data();
+	void shift_physics_interpolation(const Vector3 &p_offset);
 
 #ifdef TOOLS_ENABLED
 	virtual Transform3D get_global_gizmo_transform() const;

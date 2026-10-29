@@ -246,6 +246,15 @@
 				[b]Note:[/b] The gizmo object would typically be an instance of [EditorNode3DGizmo], but the argument type is kept generic to avoid creating a dependency on editor classes in [Node3D].
 			</description>
 		</method>
+		<method name="shift_physics_interpolation">
+			<return type="void" />
+			<param index="0" name="offset" type="Vector3" />
+			<description>
+				Translates the transform this node is interpolated from (its transform on the previous physics tick) by [param offset], expressed in the parent's space like [member position].
+				Use it for origin shifting (a floating origin): when this node and its surroundings are moved by the same offset during a physics tick, call it with that offset instead of [method Node.reset_physics_interpolation]. A reset would hide the jump as well, but the node would also stand still for one physics tick, which is visible on fast moving objects.
+				Only the node's own transform history is shifted; children keep their local transforms and follow the parent. Call it for every node whose [member position] was shifted, such as [member top_level] descendants.
+			</description>
+		</method>
 		<method name="show">
 			<return type="void" />
 			<description>

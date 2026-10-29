@@ -523,6 +523,31 @@ Transform3D Node3D::_get_global_transform_interpolated(real_t p_interpolation_fr
 	return res;
 }
 
+// Origin shifting (floating origin): when a node and everything it is
+// interpolated against are translated by the same offset, the translation is
+// not motion. `reset_physics_interpolation()` would hide it but also drop the
+// tick of motion still being interpolated (the node stands still for one
+// tick). Translating the stored history as well keeps interpolation continuous.
+// `p_offset` is in the parent's space, i.e. the same translation that was (or
+// will be) applied to the local transform during this physics tick.
+void Node3D::shift_physics_interpolation(const Vector3 &p_offset) {
+	ERR_THREAD_GUARD;
+	// SceneTreeFTI interpolates from the local transform of the previous tick.
+	data.local_transform_prev.origin += p_offset;
+
+	// Client side interpolation stores global transforms. Both are shifted:
+	// the next update copies `curr` into `prev`.
+	if (data.client_physics_interpolation_data) {
+		Vector3 global_offset = p_offset;
+		const Node3D *parent = get_parent_node_3d();
+		if (parent && !data.top_level) {
+			global_offset = parent->get_global_transform().basis.xform(p_offset);
+		}
+		data.client_physics_interpolation_data->global_xform_prev.origin += global_offset;
+		data.client_physics_interpolation_data->global_xform_curr.origin += global_offset;
+	}
+}
+
 // Visible nodes - get_global_transform_interpolated is cheap.
 // Invisible nodes - get_global_transform_interpolated is expensive, try to avoid.
 Transform3D Node3D::get_global_transform_interpolated() {
@@ -1444,6 +1469,7 @@ void Node3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_global_transform", "global"), &Node3D::set_global_transform);
 	ClassDB::bind_method(D_METHOD("get_global_transform"), &Node3D::get_global_transform);
 	ClassDB::bind_method(D_METHOD("get_global_transform_interpolated"), &Node3D::get_global_transform_interpolated);
+	ClassDB::bind_method(D_METHOD("shift_physics_interpolation", "offset"), &Node3D::shift_physics_interpolation);
 	ClassDB::bind_method(D_METHOD("set_global_position", "position"), &Node3D::set_global_position);
 	ClassDB::bind_method(D_METHOD("get_global_position"), &Node3D::get_global_position);
 	ClassDB::bind_method(D_METHOD("set_global_basis", "basis"), &Node3D::set_global_basis);
